@@ -55,10 +55,10 @@ void test_multi_cpu(int thread_num, int arrsize, int loop_num, bool enable_multi
 int main(){
     test_single_cpu(8, 10000);
     
-    double t1 = tools::timewait(test_multi_cpu, 8, 100000, 100000, false);
-    double t2 = tools::timewait(test_multi_cpu, 8, 100000, 100000, true);
+    double t1 = tools::timewait(test_multi_cpu, 8, 10000, 10000, false);
+    double t2 = tools::timewait(test_multi_cpu, 8, 10000, 10000, true);
     
-    std::cout << "running time : " << t1 << " (s)" << std::endl;
-    std::cout << "running time : " << t2 << " (s)" << std::endl;
+    std::cout << "before opening multi-cpu running time : " << t1 << " (s)" << std::endl;
+    std::cout << "after opening multi-cpu running time : " << t2 << " (s)" << std::endl;
     return 0;
 }
