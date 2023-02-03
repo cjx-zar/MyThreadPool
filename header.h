@@ -7,6 +7,7 @@
 #include <iostream>
 #include <future>
 #include <condition_variable>
+#include <unistd.h>
 
 namespace threadpool{
     using Task = tools::Task;

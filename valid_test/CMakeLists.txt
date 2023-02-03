@@ -12,3 +12,5 @@ add_definitions(
 )
 
 add_executable(test test_dynamic.cpp)
+
+target_link_libraries(test -lpthread)

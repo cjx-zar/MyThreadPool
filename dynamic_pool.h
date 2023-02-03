@@ -5,12 +5,19 @@ namespace threadpool{
     class Dynamic_pool{
     public:
         Dynamic_pool(int num): thread_num(num){
+            lock_guard guard(m_lock);
             for(int i=0; i<thread_num; i++){
                 pool.emplace_back(std::thread(&Dynamic_pool::run, this, i));
             }
         }
 
-        Dynamic_pool(int num, bool enable_multicpu): thread_num(num), enable_multicpu(enable_multicpu){
+        Dynamic_pool(int num, bool enable_multicpu, int cpus = 4): thread_num(num), enable_multicpu(enable_multicpu){
+            lock_guard guard(m_lock);
+            CPU_ZERO(&cpuset);
+
+            for(int i=0; i<cpus; i++){
+                CPU_SET(i, &cpuset);
+            }
             for(int i=0; i<thread_num; i++){
                 pool.emplace_back(std::thread(&Dynamic_pool::run, this, i));
             }
@@ -70,6 +77,7 @@ namespace threadpool{
     private:
         int thread_num;
         int remain_tasks = 0;
+        cpu_set_t cpuset;
         bool stop = false;
         bool enable_multicpu = false;
         std::vector<std::thread> pool;
@@ -79,18 +87,38 @@ namespace threadpool{
         std::queue<Task> task_queue;
     
     private:    
+        int push(std::thread&& thd){
+            pool.push_back(std::move(thd));
+            return (int)pool.size() - 1;
+        }
+
         void run(int idx){
+            int rc =pthread_setaffinity_np(pool[idx].native_handle(), sizeof(cpu_set_t), &cpuset);
+            if (rc != 0) {
+                std::cerr << "Error calling pthread_setaffinity_np: " << rc << std::endl;
+            }
+            
             while(!stop){
                 uniq_guard guard(m_lock);
                 cv_awake.wait(guard, [this]{return stop || !is_free();});
 
                 if(!stop){
-                    Task curtask(std::move(task_queue.front()));
-                    task_queue.pop();
-                    curtask.call();
-                    remain_tasks--;
+                    Task curtask;
+                    if(!task_queue.empty()){
+                        curtask = std::move(task_queue.front());
+                        task_queue.pop();
+                    }
+
+                    if(enable_multicpu)
+                        guard.unlock();
                     
-                    guard.unlock();
+                    if(curtask.working()){
+                        curtask.call();
+                        remain_tasks--;
+                    }
+                    
+                    if(!enable_multicpu)
+                        guard.unlock();
                     
                     if(!remain_tasks){
                         lock_guard tmp_guard(m_lock);
