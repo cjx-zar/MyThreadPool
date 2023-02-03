@@ -11,13 +11,9 @@ namespace threadpool{
             }
         }
 
-        Dynamic_pool(int num, bool enable_multicpu, int cpus = 4): thread_num(num), enable_multicpu(enable_multicpu){
+        Dynamic_pool(int num, bool enable_multicpu, int cs=8): thread_num(num), enable_multicpu(enable_multicpu), cpus(cs){
             lock_guard guard(m_lock);
-            CPU_ZERO(&cpuset);
-
-            for(int i=0; i<cpus; i++){
-                CPU_SET(i, &cpuset);
-            }
+            
             for(int i=0; i<thread_num; i++){
                 pool.emplace_back(std::thread(&Dynamic_pool::run, this, i));
             }
@@ -76,10 +72,10 @@ namespace threadpool{
 
     private:
         int thread_num;
-        int remain_tasks = 0;
-        cpu_set_t cpuset;
-        bool stop = false;
+        std::atomic_uint remain_tasks = {0};
         bool enable_multicpu = false;
+        int cpus = 8;
+        bool stop = false;
         std::vector<std::thread> pool;
         std::mutex m_lock;
         std::condition_variable cv_awake;
@@ -93,9 +89,14 @@ namespace threadpool{
         }
 
         void run(int idx){
-            int rc =pthread_setaffinity_np(pool[idx].native_handle(), sizeof(cpu_set_t), &cpuset);
-            if (rc != 0) {
-                std::cerr << "Error calling pthread_setaffinity_np: " << rc << std::endl;
+            if(enable_multicpu){
+                cpu_set_t cpuset;
+                CPU_ZERO(&cpuset);
+                CPU_SET(idx % cpus, &cpuset);
+                int rc =pthread_setaffinity_np(pool[idx].native_handle(), sizeof(cpu_set_t), &cpuset);
+                if (rc != 0) {
+                    std::cerr << "Error calling pthread_setaffinity_np: " << rc << std::endl;
+                }
             }
             
             while(!stop){
