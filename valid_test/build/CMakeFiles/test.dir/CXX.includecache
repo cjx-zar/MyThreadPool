@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/cjx/workspace/MyThreadPool/././tools.h
+functional
+-
+
+/home/cjx/workspace/MyThreadPool/./header.h
+./tools.h
+/home/cjx/workspace/MyThreadPool/././tools.h
+thread
+-
+mutex
+-
+vector
+-
+queue
+-
+iostream
+-
+future
+-
+condition_variable
+-
+
+/home/cjx/workspace/MyThreadPool/dynamic_pool.h
+./header.h
+/home/cjx/workspace/MyThreadPool/./header.h
+
+/home/cjx/workspace/MyThreadPool/valid_test/test_dynamic.cpp
+../dynamic_pool.h
+/home/cjx/workspace/MyThreadPool/dynamic_pool.h
+
