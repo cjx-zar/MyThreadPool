@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/cjx/workspace/MyThreadPool/valid_test/test_dynamic.cpp" "/home/cjx/workspace/MyThreadPool/valid_test/build/CMakeFiles/test.dir/test_dynamic.cpp.o"
+  "/home/cjx/workspace/MyThreadPool/valid_test/test_stdpool.cpp" "/home/cjx/workspace/MyThreadPool/valid_test/build/CMakeFiles/test.dir/test_stdpool.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <unistd.h>
 #include <atomic>
+#include <climits>
 
 namespace threadpool{
     using Task = tools::Task;

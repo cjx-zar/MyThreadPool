@@ -123,32 +123,32 @@ test/fast:
 	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/build
 .PHONY : test/fast
 
-test_dynamic.o: test_dynamic.cpp.o
+test_stdpool.o: test_stdpool.cpp.o
 
-.PHONY : test_dynamic.o
+.PHONY : test_stdpool.o
 
 # target to build an object file
-test_dynamic.cpp.o:
-	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test_dynamic.cpp.o
-.PHONY : test_dynamic.cpp.o
+test_stdpool.cpp.o:
+	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test_stdpool.cpp.o
+.PHONY : test_stdpool.cpp.o
 
-test_dynamic.i: test_dynamic.cpp.i
+test_stdpool.i: test_stdpool.cpp.i
 
-.PHONY : test_dynamic.i
+.PHONY : test_stdpool.i
 
 # target to preprocess a source file
-test_dynamic.cpp.i:
-	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test_dynamic.cpp.i
-.PHONY : test_dynamic.cpp.i
+test_stdpool.cpp.i:
+	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test_stdpool.cpp.i
+.PHONY : test_stdpool.cpp.i
 
-test_dynamic.s: test_dynamic.cpp.s
+test_stdpool.s: test_stdpool.cpp.s
 
-.PHONY : test_dynamic.s
+.PHONY : test_stdpool.s
 
 # target to generate assembly for a file
-test_dynamic.cpp.s:
-	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test_dynamic.cpp.s
-.PHONY : test_dynamic.cpp.s
+test_stdpool.cpp.s:
+	$(MAKE) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test_stdpool.cpp.s
+.PHONY : test_stdpool.cpp.s
 
 # Help Target
 help:
@@ -159,9 +159,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... edit_cache"
-	@echo "... test_dynamic.o"
-	@echo "... test_dynamic.i"
-	@echo "... test_dynamic.s"
+	@echo "... test_stdpool.o"
+	@echo "... test_stdpool.i"
+	@echo "... test_stdpool.s"
 .PHONY : help
 
 

@@ -57,27 +57,27 @@ include CMakeFiles/test.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/test.dir/flags.make
 
-CMakeFiles/test.dir/test_dynamic.cpp.o: CMakeFiles/test.dir/flags.make
-CMakeFiles/test.dir/test_dynamic.cpp.o: ../test_dynamic.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cjx/workspace/MyThreadPool/valid_test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/test.dir/test_dynamic.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/test_dynamic.cpp.o -c /home/cjx/workspace/MyThreadPool/valid_test/test_dynamic.cpp
+CMakeFiles/test.dir/test_stdpool.cpp.o: CMakeFiles/test.dir/flags.make
+CMakeFiles/test.dir/test_stdpool.cpp.o: ../test_stdpool.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cjx/workspace/MyThreadPool/valid_test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/test.dir/test_stdpool.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/test.dir/test_stdpool.cpp.o -c /home/cjx/workspace/MyThreadPool/valid_test/test_stdpool.cpp
 
-CMakeFiles/test.dir/test_dynamic.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test.dir/test_dynamic.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cjx/workspace/MyThreadPool/valid_test/test_dynamic.cpp > CMakeFiles/test.dir/test_dynamic.cpp.i
+CMakeFiles/test.dir/test_stdpool.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test.dir/test_stdpool.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cjx/workspace/MyThreadPool/valid_test/test_stdpool.cpp > CMakeFiles/test.dir/test_stdpool.cpp.i
 
-CMakeFiles/test.dir/test_dynamic.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test.dir/test_dynamic.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cjx/workspace/MyThreadPool/valid_test/test_dynamic.cpp -o CMakeFiles/test.dir/test_dynamic.cpp.s
+CMakeFiles/test.dir/test_stdpool.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test.dir/test_stdpool.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cjx/workspace/MyThreadPool/valid_test/test_stdpool.cpp -o CMakeFiles/test.dir/test_stdpool.cpp.s
 
 # Object files for target test
 test_OBJECTS = \
-"CMakeFiles/test.dir/test_dynamic.cpp.o"
+"CMakeFiles/test.dir/test_stdpool.cpp.o"
 
 # External object files for target test
 test_EXTERNAL_OBJECTS =
 
-test: CMakeFiles/test.dir/test_dynamic.cpp.o
+test: CMakeFiles/test.dir/test_stdpool.cpp.o
 test: CMakeFiles/test.dir/build.make
 test: CMakeFiles/test.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cjx/workspace/MyThreadPool/valid_test/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable test"

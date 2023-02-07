@@ -11,6 +11,7 @@ add_definitions(
 		"-g"
 )
 
-add_executable(test test_dynamic.cpp)
+# add_executable(test test_fixthread.cpp)
+add_executable(test test_stdpool.cpp)
 
 target_link_libraries(test -lpthread)

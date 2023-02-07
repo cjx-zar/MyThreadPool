@@ -1,1 +1,1 @@
-/usr/bin/c++  -pthread   CMakeFiles/test.dir/test_dynamic.cpp.o  -o test -lpthread 
+/usr/bin/c++  -pthread   CMakeFiles/test.dir/test_stdpool.cpp.o  -o test -lpthread 
