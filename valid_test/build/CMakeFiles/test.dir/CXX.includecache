@@ -43,4 +43,6 @@ climits
 /home/cjx/workspace/MyThreadPool/valid_test/test_stdpool.cpp
 ../std_pool.h
 /home/cjx/workspace/MyThreadPool/std_pool.h
+pqxx/pqxx
+-
 

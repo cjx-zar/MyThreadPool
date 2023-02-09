@@ -13,7 +13,6 @@ namespace threadpool{
 
         FixThread_pool(int num, bool enable_multicpu, int cs=8): thread_num(num), enable_multicpu(enable_multicpu), cpus(cs){
             lock_guard guard(m_lock);
-            
             for(int i=0; i<thread_num; i++){
                 pool.emplace_back(std::thread(&FixThread_pool::run, this, i));
             }

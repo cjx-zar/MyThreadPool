@@ -13,9 +13,9 @@
 namespace threadpool{
     class Std_pool{
     public:
-        Std_pool(const std::string& str, int max_cap=INT_MAX): max_task_cap(max_cap){
+        Std_pool(const std::string& str, int max_cap=INT_MAX, bool safe = false): max_task_cap(max_cap), resource_safe(safe){
             int cpus = sysconf(_SC_NPROCESSORS_CONF);
-            std::cout << "Total cores : " << cpus << std::endl;
+            // std::cout << "Total cores : " << cpus << std::endl;
             if(str == "IO") {
                 core_thd_num = 2 * cpus;
                 max_thd_num = 25 * cpus;
@@ -28,8 +28,8 @@ namespace threadpool{
                 max_thd_num = 1000;
             };
         }
-        Std_pool(int core_num=10, int max_num=1000, int max_cap=INT_MAX):
-        core_thd_num(core_num), max_thd_num(max_num), max_task_cap(max_cap){}
+        Std_pool(int core_num=10, int max_num=1000, int max_cap=INT_MAX, bool safe = false):
+        core_thd_num(core_num), max_thd_num(max_num), max_task_cap(max_cap), resource_safe(false){}
 
         ~Std_pool(){
             if(!stop){
@@ -37,7 +37,155 @@ namespace threadpool{
             }
         }
 
-        template <typename _Callable, typename... Args>
+        template <typename R, typename T, typename... Args> // 成员函数
+        auto submit(R (T::* f)(Args...), T&& obj, Args&&... args) -> std::future<decltype((obj.*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((obj.*f)(std::forward<Args>(args)...));
+
+            std::function<RT()> func = std::bind(f, obj, std::forward<Args>(args)...);
+            auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
+
+            std::function<void()> warpper_func_ptr = [func_ptr](){
+                (*func_ptr)();
+            };
+
+            {
+                lock_guard guard(m_lock);
+                Task task(warpper_func_ptr);
+
+                if(cur_thd_num < core_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else if((int)task_queue.size() < max_task_cap){
+                    task_queue.push(std::move(task));
+                    cv_awake.notify_one();
+                    remain_tasks++;
+                }else if(cur_thd_num < max_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else {
+                    // reject
+                    drop_task++;
+                    std::string msg = "The pool was full and " + std::to_string(drop_task)  + " tasks were dropped!";
+                    throw msg;
+                }
+            }
+            return func_ptr->get_future();
+        }
+
+        template <typename R, typename T, typename... Args> // const成员函数
+        auto submit(R (T::* f)(Args...) const, T&& obj, Args&&... args) -> std::future<decltype((obj.*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((obj.*f)(std::forward<Args>(args)...));
+
+            std::function<RT()> func = std::bind(f, obj, std::forward<Args>(args)...);
+            auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
+
+            std::function<void()> warpper_func_ptr = [func_ptr](){
+                (*func_ptr)();
+            };
+
+            {
+                lock_guard guard(m_lock);
+                Task task(warpper_func_ptr);
+
+                if(cur_thd_num < core_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else if((int)task_queue.size() < max_task_cap){
+                    task_queue.push(std::move(task));
+                    cv_awake.notify_one();
+                    remain_tasks++;
+                }else if(cur_thd_num < max_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else {
+                    // reject
+                    drop_task++;
+                    std::string msg = "The pool was full and " + std::to_string(drop_task)  + " tasks were dropped!";
+                    throw msg;
+                }
+            }
+            return func_ptr->get_future();
+        }
+
+        template <typename R, typename T, typename C, typename... Args> // 基类成员函数
+        auto submit(R (T::* f)(Args...), C* obj, Args&&... args) -> std::future<decltype((obj->*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((obj->*f)(std::forward<Args>(args)...));
+
+            std::function<RT()> func = std::bind(f, obj, std::forward<Args>(args)...);
+            auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
+
+            std::function<void()> warpper_func_ptr = [func_ptr](){
+                (*func_ptr)();
+            };
+
+            {
+                lock_guard guard(m_lock);
+                Task task(warpper_func_ptr);
+
+                if(cur_thd_num < core_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else if((int)task_queue.size() < max_task_cap){
+                    task_queue.push(std::move(task));
+                    cv_awake.notify_one();
+                    remain_tasks++;
+                }else if(cur_thd_num < max_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else {
+                    // reject
+                    drop_task++;
+                    std::string msg = "The pool was full and " + std::to_string(drop_task)  + " tasks were dropped!";
+                    throw msg;
+                }
+            }
+            return func_ptr->get_future();
+        }
+
+        template <typename R, typename T, typename C, typename... Args> // const基类成员函数
+        auto submit(R (T::* f)(Args...) const, C* obj, Args&&... args) -> std::future<decltype((obj->*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((obj->*f)(std::forward<Args>(args)...));
+
+            std::function<RT()> func = std::bind(f, std::forward<C>(obj), std::forward<Args>(args)...);
+            auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
+
+            std::function<void()> warpper_func_ptr = [func_ptr](){
+                (*func_ptr)();
+            };
+
+            {
+                lock_guard guard(m_lock);
+                Task task(warpper_func_ptr);
+
+                if(cur_thd_num < core_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else if((int)task_queue.size() < max_task_cap){
+                    task_queue.push(std::move(task));
+                    cv_awake.notify_one();
+                    remain_tasks++;
+                }else if(cur_thd_num < max_thd_num){
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
+                    cur_thd_num++;
+                    remain_tasks++;
+                }else {
+                    // reject
+                    drop_task++;
+                    std::string msg = "The pool was full and " + std::to_string(drop_task)  + " tasks were dropped!";
+                    throw msg;
+                }
+            }
+            return func_ptr->get_future();
+        }
+
+        template <typename _Callable, typename... Args> //普通函数、仿函数、lambda、静态成员函数
         auto submit(_Callable&& f, Args&&... args) -> std::future<decltype(f(std::forward<Args>(args)...))>{
             using RT = decltype(f(std::forward<Args>(args)...));
 
@@ -53,15 +201,15 @@ namespace threadpool{
                 Task task(warpper_func_ptr);
 
                 if(cur_thd_num < core_thd_num){
-                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task)));
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
                     cur_thd_num++;
                     remain_tasks++;
-                }else if(task_queue.size() < max_task_cap){
+                }else if((int)task_queue.size() < max_task_cap){
                     task_queue.push(std::move(task));
                     cv_awake.notify_one();
                     remain_tasks++;
                 }else if(cur_thd_num < max_thd_num){
-                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task)));
+                    pool.emplace_back(std::thread(&Std_pool::run, this, std::move(task), cur_thd_num));
                     cur_thd_num++;
                     remain_tasks++;
                 }else {
@@ -75,6 +223,7 @@ namespace threadpool{
         }
 
         void wait_tasks(){
+            // std::cout << remain_tasks << std::endl;
             uniq_guard guard(m_lock);
             cv_task_done.wait(guard, [this]{return !remain_tasks;});
         }
@@ -95,6 +244,7 @@ namespace threadpool{
         int cur_thd_num = 0, drop_task = 0;
         std::queue<Task> task_queue;
         bool stop = false;
+        bool resource_safe = false;
         std::vector<std::thread> pool;
         std::mutex m_lock;
         std::condition_variable cv_awake;
@@ -102,10 +252,28 @@ namespace threadpool{
         std::atomic_uint remain_tasks = {0};
 
     private:
-        void run(Task&& init_task){
+        void run(Task&& init_task, int idx){
+            // cpu_set_t cpuset;
+            // CPU_ZERO(&cpuset);
+            // CPU_SET(idx % 8, &cpuset);
+            // int rc =pthread_setaffinity_np(pool[idx].native_handle(), sizeof(cpu_set_t), &cpuset);
+            // if (rc != 0) {
+            //     std::cerr << "Error calling pthread_setaffinity_np: " << rc << std::endl;
+            // }
+
             if(init_task.working()){
+                uniq_guard guard(m_lock);
+                if(resource_safe)
+                    guard.unlock();
+                    
                 init_task.call();
                 remain_tasks--;
+                if(!resource_safe)
+                    guard.unlock();
+                if(!remain_tasks){
+                    lock_guard tmp_guard(m_lock);
+                    cv_task_done.notify_one();
+                }
             }
             while(!stop){
                 uniq_guard guard(m_lock);
@@ -113,14 +281,20 @@ namespace threadpool{
 
                 if(!stop){
                     Task curtask;
+                    if(task_queue.empty()) std::cout << "wired" << std::endl;
                     curtask = std::move(task_queue.front());
                     task_queue.pop();
 
+                    if(resource_safe)
+                        guard.unlock();
+
+                    if(!curtask.working()) std::cout << "can not work" << std::endl;
                     curtask.call();
                     remain_tasks--;
 
-                    guard.unlock();
-                    
+                    if(!resource_safe)
+                        guard.unlock();
+
                     if(!remain_tasks){
                         lock_guard tmp_guard(m_lock);
                         cv_task_done.notify_one();

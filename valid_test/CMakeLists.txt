@@ -14,4 +14,5 @@ add_definitions(
 # add_executable(test test_fixthread.cpp)
 add_executable(test test_stdpool.cpp)
 
-target_link_libraries(test -lpthread)
+# target_link_libraries(test -lpthread)
+target_link_libraries(test -lpthread -lpqxx -lpq)
