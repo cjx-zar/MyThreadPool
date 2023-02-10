@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <unistd.h>
 #include <atomic>
+#include <type_traits>
 #include <climits>
 
 namespace threadpool{

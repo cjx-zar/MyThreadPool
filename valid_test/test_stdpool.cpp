@@ -55,15 +55,16 @@ void test_db_multithd(int loop_num, bool safe){
 
     const std::string sql_str = "select count(*) from previous cross join (select * from application limit 10) as tmp;";
     const std::string tmp = "";
-    using type = pqxx::result(pqxx::nontransaction::*)(const std::string&, const std::string&);
+    using type = pqxx::result(pqxx::nontransaction::*)(const std::string&, const std::string&); //有重载在bind时必须指明函数
     Std_pool pool("CPU", INT_MAX, safe);
     std::vector<pqxx::connection*> conn_pool;
     std::vector<std::future<pqxx::result>> future_pool;
-    std::vector<pqxx::nontransaction*> worker_pool;
+    std::vector<pqxx::nontransaction*> worker_pool; //用指针防止使用deleted的拷贝构造函数
     for(int i=0; i<loop_num; i++){
+        //多个worker和多个conn保证对数据库的高效访问（模拟连接池）
         conn_pool.push_back(new pqxx::connection("dbname=credit user=postgres password=chen4 hostaddr=127.0.0.1 port=5432"));
         worker_pool.push_back(new pqxx::nontransaction(*conn_pool[i]));
-        future_pool.push_back(pool.submit((type)&pqxx::nontransaction::exec, worker_pool[i], sql_str, tmp));
+        future_pool.push_back(pool.submit((type)&pqxx::nontransaction::exec, worker_pool[i], sql_str, tmp)); 
     }
     pool.wait_tasks();
     pool.close();
@@ -79,11 +80,11 @@ void test_db_multithd(int loop_num, bool safe){
 
 int main(){
     // test_single_cpu(10000);
-    double t1 = tools::timewait(test_db_seq, 100);
-    std::cout << "Sequential running time : " << t1 << " (s)" << std::endl;
+    // double t1 = tools::timewait(test_db_seq, 100);
+    // std::cout << "Sequential running time : " << t1 << " (s)" << std::endl;
 
-    double t2 = tools::timewait(test_db_multithd, 100, false);
-    std::cout << "Multi-thread running time : " << t2 << " (s)" << std::endl;
+    // double t2 = tools::timewait(test_db_multithd, 100, false);
+    // std::cout << "Multi-thread running time : " << t2 << " (s)" << std::endl;
 
     double t3 = tools::timewait(test_db_multithd, 100, true);
     std::cout << "Multi-thread running time : " << t3 << " (s)" << std::endl;

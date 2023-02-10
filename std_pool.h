@@ -37,11 +37,29 @@ namespace threadpool{
             }
         }
 
-        template <typename R, typename T, typename... Args> // 成员函数
-        auto submit(R (T::* f)(Args...), T&& obj, Args&&... args) -> std::future<decltype((obj.*f)(std::forward<Args>(args)...))>{
-            using RT = decltype((obj.*f)(std::forward<Args>(args)...));
+        template<class T>
+        struct is_pointer : std::false_type {};
+ 
+        template<class T>
+        struct is_pointer<T*> : std::true_type {};
 
-            std::function<RT()> func = std::bind(f, obj, std::forward<Args>(args)...);
+        template <typename T>
+        typename std::enable_if<is_pointer<typename std::remove_cv<T>::type>::value, T>::type
+        atoptr(T& obj){
+            return obj;
+        } 
+
+        template <typename T>
+        typename std::enable_if<!is_pointer<typename std::remove_cv<T>::type>::value, T*>::type
+        atoptr(T& obj){
+            return &obj;
+        }         
+
+        template <typename R, typename T, typename... Args> // 成员函数
+        auto submit(R (T::* f)(Args...), T&& obj, Args&&... args) -> std::future<decltype((atoptr(obj)->*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((atoptr(obj)->*f)(std::forward<Args>(args)...));
+
+            std::function<RT()> func = std::bind(f, atoptr(obj), std::forward<Args>(args)...);
             auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
 
             std::function<void()> warpper_func_ptr = [func_ptr](){
@@ -75,10 +93,10 @@ namespace threadpool{
         }
 
         template <typename R, typename T, typename... Args> // const成员函数
-        auto submit(R (T::* f)(Args...) const, T&& obj, Args&&... args) -> std::future<decltype((obj.*f)(std::forward<Args>(args)...))>{
-            using RT = decltype((obj.*f)(std::forward<Args>(args)...));
+        auto submit(R (T::* f)(Args...) const, T&& obj, Args&&... args) -> std::future<decltype((atoptr(obj)->*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((atoptr(obj)->*f)(std::forward<Args>(args)...));
 
-            std::function<RT()> func = std::bind(f, obj, std::forward<Args>(args)...);
+            std::function<RT()> func = std::bind(f, atoptr(obj), std::forward<Args>(args)...);
             auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
 
             std::function<void()> warpper_func_ptr = [func_ptr](){
@@ -112,10 +130,10 @@ namespace threadpool{
         }
 
         template <typename R, typename T, typename C, typename... Args> // 基类成员函数
-        auto submit(R (T::* f)(Args...), C* obj, Args&&... args) -> std::future<decltype((obj->*f)(std::forward<Args>(args)...))>{
-            using RT = decltype((obj->*f)(std::forward<Args>(args)...));
+        auto submit(R (T::* f)(Args...), C&& obj, Args&&... args) -> std::future<decltype((atoptr(obj)->*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((atoptr(obj)->*f)(std::forward<Args>(args)...));
 
-            std::function<RT()> func = std::bind(f, obj, std::forward<Args>(args)...);
+            std::function<RT()> func = std::bind(f, atoptr(obj), std::forward<Args>(args)...);
             auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
 
             std::function<void()> warpper_func_ptr = [func_ptr](){
@@ -149,10 +167,10 @@ namespace threadpool{
         }
 
         template <typename R, typename T, typename C, typename... Args> // const基类成员函数
-        auto submit(R (T::* f)(Args...) const, C* obj, Args&&... args) -> std::future<decltype((obj->*f)(std::forward<Args>(args)...))>{
-            using RT = decltype((obj->*f)(std::forward<Args>(args)...));
+        auto submit(R (T::* f)(Args...) const, C&& obj, Args&&... args) -> std::future<decltype((atoptr(obj)->*f)(std::forward<Args>(args)...))>{
+            using RT = decltype((atoptr(obj)->*f)(std::forward<Args>(args)...));
 
-            std::function<RT()> func = std::bind(f, std::forward<C>(obj), std::forward<Args>(args)...);
+            std::function<RT()> func = std::bind(f, atoptr(obj), std::forward<Args>(args)...);
             auto func_ptr = std::make_shared<std::packaged_task<RT()>>(func);
 
             std::function<void()> warpper_func_ptr = [func_ptr](){
