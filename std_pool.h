@@ -32,7 +32,7 @@ namespace threadpool{
         core_thd_num(core_num), max_thd_num(max_num), max_task_cap(max_cap), resource_safe(false){}
 
         ~Std_pool(){
-            if(!stop){
+            if(!stop.load()){
                 close();
             }
         }
@@ -249,7 +249,7 @@ namespace threadpool{
         void close(){
             {
                 lock_guard guard(m_lock);
-                stop = true;
+                stop.store(true);
                 cv_awake.notify_all();
             }
             for (auto& t: pool) {
@@ -261,8 +261,8 @@ namespace threadpool{
         int core_thd_num, max_thd_num, max_task_cap;
         int cur_thd_num = 0, drop_task = 0;
         std::queue<Task> task_queue;
-        bool stop = false;
-        bool resource_safe = false;
+        std::atomic_bool stop = {false};
+        std::atomic_bool resource_safe = {false};
         std::vector<std::thread> pool;
         std::mutex m_lock;
         std::condition_variable cv_awake;
@@ -281,36 +281,36 @@ namespace threadpool{
 
             if(init_task.working()){
                 uniq_guard guard(m_lock);
-                if(resource_safe)
+                if(resource_safe.load())
                     guard.unlock();
                     
                 init_task.call();
                 remain_tasks--;
-                if(!resource_safe)
+                if(!resource_safe.load())
                     guard.unlock();
                 if(!remain_tasks){
                     lock_guard tmp_guard(m_lock);
                     cv_task_done.notify_one();
                 }
             }
-            while(!stop){
+            while(!stop.load()){
                 uniq_guard guard(m_lock);
-                cv_awake.wait(guard, [this]{return stop || !task_queue.empty();});
+                cv_awake.wait(guard, [this]{return stop.load() || !task_queue.empty();});
 
-                if(!stop){
+                if(!stop.load()){
                     Task curtask;
                     if(task_queue.empty()) std::cout << "wired" << std::endl;
                     curtask = std::move(task_queue.front());
                     task_queue.pop();
 
-                    if(resource_safe)
+                    if(resource_safe.load())
                         guard.unlock();
 
                     if(!curtask.working()) std::cout << "can not work" << std::endl;
                     curtask.call();
                     remain_tasks--;
 
-                    if(!resource_safe)
+                    if(!resource_safe.load())
                         guard.unlock();
 
                     if(!remain_tasks){

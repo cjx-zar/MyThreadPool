@@ -19,7 +19,7 @@ namespace threadpool{
         }
 
         ~FixThread_pool(){
-            if(!stop){
+            if(!stop.load()){
                 close();
             }
         }
@@ -57,7 +57,7 @@ namespace threadpool{
         void close(){
             {
                 lock_guard guard(m_lock);
-                stop = true;
+                stop.store(true);
                 cv_awake.notify_all();
             }
             for (auto& t: pool) {
@@ -68,9 +68,9 @@ namespace threadpool{
     private:
         int thread_num;
         std::atomic_uint remain_tasks = {0};
-        bool enable_multicpu = false;
+        std::atomic_bool enable_multicpu = {false};
         int cpus = 8;
-        bool stop = false;
+        std::atomic_bool stop = {false};
         std::vector<std::thread> pool;
         std::mutex m_lock;
         std::condition_variable cv_awake;
@@ -79,7 +79,7 @@ namespace threadpool{
     
     private:
         void run(int idx){
-            if(enable_multicpu){
+            if(enable_multicpu.load()){
                 cpu_set_t cpuset;
                 CPU_ZERO(&cpuset);
                 CPU_SET(idx % cpus, &cpuset);
@@ -89,15 +89,15 @@ namespace threadpool{
                 }
             }
             
-            while(!stop){
+            while(!stop.load()){
                 uniq_guard guard(m_lock);
-                cv_awake.wait(guard, [this]{return stop || !task_queue.empty();});
+                cv_awake.wait(guard, [this]{return stop.load() || !task_queue.empty();});
 
-                if(!stop){
+                if(!stop.load()){
                     Task curtask(std::move(task_queue.front()));
                     task_queue.pop();
 
-                    if(enable_multicpu)
+                    if(enable_multicpu.load())
                         guard.unlock();
                     
                     if(curtask.working()){
@@ -105,7 +105,7 @@ namespace threadpool{
                         remain_tasks--;
                     }
                     
-                    if(!enable_multicpu)
+                    if(!enable_multicpu.load())
                         guard.unlock();
                     
                     if(!remain_tasks){
