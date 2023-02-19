@@ -80,13 +80,19 @@ void test_db_multithd(int loop_num, bool safe){
 
 int main(){
     // test_single_cpu(10000);
-    double t1 = tools::timewait(test_db_seq, 100);
-    std::cout << "Sequential running time : " << t1 << " (s)" << std::endl;
+    std::vector<int> arr({10, 50, 100});
 
-    double t2 = tools::timewait(test_db_multithd, 100, false);
-    std::cout << "Multi-thread running time : " << t2 << " (s)" << std::endl;
+    for(const auto & x : arr){
+        std::cout << x << " results:" << std::endl;
 
-    double t3 = tools::timewait(test_db_multithd, 100, true);
-    std::cout << "Multi-thread running time : " << t3 << " (s)" << std::endl;
+        double t1 = tools::timewait(test_db_seq, x);
+        std::cout << "Sequential running time : " << t1 << " (s)" << std::endl;
+
+        double t2 = tools::timewait(test_db_multithd, x, false);
+        std::cout << "Multi-thread running time : " << t2 << " (s)" << std::endl;
+
+        double t3 = tools::timewait(test_db_multithd, x, true);
+        std::cout << "Multi-thread running time : " << t3 << " (s)" << std::endl;
+    }
     return 0;
 }
