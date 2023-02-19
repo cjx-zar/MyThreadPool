@@ -38,7 +38,7 @@ void test_single_cpu(int loop_num){
 void test_db_seq(int loop_num){
     std::cout << "--------start testing normal sequential execute--------" << std::endl;
 
-    pqxx::connection conn("dbname=credit user=postgres password=chen4 hostaddr=127.0.0.1 port=5432");
+    pqxx::connection conn("dbname=credit user=postgres password=**** hostaddr=127.0.0.1 port=5432");
     std::string sql_str = "select count(*) from previous cross join (select * from application limit 10) as tmp;";
     pqxx::nontransaction worker(conn);
     for(int i=0; i<loop_num; i++){
@@ -62,7 +62,7 @@ void test_db_multithd(int loop_num, bool safe){
     std::vector<pqxx::nontransaction*> worker_pool; //用指针防止使用deleted的拷贝构造函数
     for(int i=0; i<loop_num; i++){
         //多个worker和多个conn保证对数据库的高效访问（模拟连接池）
-        conn_pool.push_back(new pqxx::connection("dbname=credit user=postgres password=chen4 hostaddr=127.0.0.1 port=5432"));
+        conn_pool.push_back(new pqxx::connection("dbname=credit user=postgres password=**** hostaddr=127.0.0.1 port=5432"));
         worker_pool.push_back(new pqxx::nontransaction(*conn_pool[i]));
         future_pool.push_back(pool.submit((type)&pqxx::nontransaction::exec, worker_pool[i], sql_str, tmp)); 
     }
