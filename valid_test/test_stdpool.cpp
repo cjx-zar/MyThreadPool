@@ -11,19 +11,36 @@ void plus_loop(int& x, int loop_num){
     }
 }
 
-void plus(int& x){
-    // std::this_thread::yield();
+// void plus(int& x){
+//     // std::this_thread::yield();
+//     x++;
+//     // std::cout << x << std::endl;
+// }
+
+class Func{
+public:
+    Func(int x):t(x){}
+    void operator() (int& x) const {
+        x += t;
+    }
+private:
+    int t;
+};
+
+auto lambda = [](int& x) -> void {
     x++;
-    // std::cout << x << std::endl;
-}
+};
 
 void test_single_cpu(int loop_num){
     std::cout << "--------start testing std_pool--------" << std::endl;
     int cnt = 0;
     Std_pool pool("CPU");
+
     for(int i=0; i<loop_num; i++){
         try {
-            pool.submit(plus, std::ref(cnt));
+            // pool.submit(plus, std::ref(cnt));
+            // pool.submit(Func(1), std::ref(cnt));
+            pool.submit(lambda, std::ref(cnt));
         }catch (const std::string& msg){
             std::cerr << msg << std::endl;
         }
